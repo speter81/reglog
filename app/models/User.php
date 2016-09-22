@@ -1,6 +1,7 @@
 <?php
 
-use Phalcon\Mvc\Model\Validator\Email as Email;
+use Phalcon\Validation;
+use Phalcon\Validation\Validator\Email as EmailValidator;
 
 class User extends \Phalcon\Mvc\Model
 {
@@ -42,20 +43,13 @@ class User extends \Phalcon\Mvc\Model
 	 */
 	public function validation()
 	{
-		$this->validate(
-			new Email(
-				[
-					'field'    => 'email',
-					'required' => true,
-				]
-			)
+		$validator = new Validation();
+		$validator->add(
+			'email',
+			new EmailValidator()
 		);
 
-		if ($this->validationHasFailed() == true) {
-			return false;
-		}
-
-		return true;
+		return $this->validate($validator);
 	}
 
 	/**
@@ -101,6 +95,43 @@ class User extends \Phalcon\Mvc\Model
 	public function getName()
 	{
 		return $this->name;
+	}
+
+	public function setEmail($email)
+	{
+		if ( ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+			return false;
+		}
+		$this->email = $email;
+		return true;
+	}
+
+	public function setPassword($password)
+	{
+		if (strlen($password) < 8) {
+			return false;
+		}
+		if ( ! preg_match('/[A-Z]+/', $password)) {
+			return false;
+		}
+		if ( ! preg_match('/[a-z]+/', $password)) {
+			return false;
+		}
+		if ( ! preg_match('/[0-9]/', $password)) {
+			return false;
+		}
+		if ( ! preg_match('/[\+\-!_#]+/', $password)) {
+			return false;
+		}
+		$security = $this->getDI()->getSecurity();
+		$this->password = $security->hash($password);
+		return true;
+	}
+
+	public function setName($name)
+	{
+		$this->name = filter_var($name, FILTER_SANITIZE_STRING);
+		return true;
 	}
 
 }

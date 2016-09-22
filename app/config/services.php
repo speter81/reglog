@@ -6,6 +6,7 @@ use Phalcon\Mvc\Url as UrlResolver;
 use Phalcon\Mvc\Model\Metadata\Memory as MetaDataAdapter;
 use Phalcon\Session\Adapter\Files as SessionAdapter;
 use Phalcon\Flash\Direct as Flash;
+use Phalcon\Security;
 
 /**
  * Shared configuration service
@@ -17,8 +18,8 @@ $di->setShared('config', function () {
 /**
  * The URL component is used to generate all kind of urls in the application
  */
-$di->setShared('url', function () {
-	$config = $this->getConfig();
+$di->setShared('url', function () use ($di) {
+	$config = $di->getConfig();
 	$url = new UrlResolver();
 	$url->setBaseUri($config->application->baseUri);
 	return $url;
@@ -44,8 +45,8 @@ $di->setShared('view', function () use ($di) {
 /**
  * Database connection is created based in the parameters defined in the configuration file
  */
-$di->setShared('db', function () {
-	$config = $this->getConfig();
+$di->setShared('db', function () use ($di) {
+	$config = $di->getConfig();
 
 	$class = 'Phalcon\Db\Adapter\Pdo\\' . $config->database->adapter;
 	$connection = new $class([
@@ -92,4 +93,12 @@ $di->set('router', function() {
 	require __DIR__ . '/router.php';
 	return $router;
 	}
+);
+
+$di->set('security', function () {
+	$security = new Security();
+	$security->setWorkFactor(12);
+	return $security;
+	},
+	true
 );

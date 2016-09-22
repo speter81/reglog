@@ -5,6 +5,11 @@
 	<input type="email" name="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
 	<label for="inputPassword" class="sr-only">Password</label>
 	<input type="password" name="password" id="inputPassword" class="form-control" placeholder="Password" required>
+	<input type="hidden" name="<?=$this->security->getTokenKey() ?>" value="<?=$this->security->getToken() ?>"/>
+	<?php if ($needCaptcha) : ?>
+	<script src='https://www.google.com/recaptcha/api.js'></script>
+	<div class="g-recaptcha" data-sitekey="6LeHWwcUAAAAAH3NeUx8P8KDZ6EbAwPFfEndfXUQ"></div>
+	<?php endif; ?>
 	<button class="btn btn-lg btn-primary btn-block" type="submit">Login</button>
 	<a href="/user/registration" class="btn btn-lg btn-link btn-block" title="Registration">No account? Register here!</a>
 </form>
