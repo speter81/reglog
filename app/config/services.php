@@ -96,9 +96,22 @@ $di->set('router', function() {
 );
 
 $di->set('security', function () {
-	$security = new Security();
-	$security->setWorkFactor(12);
-	return $security;
+		$security = new Security();
+		$security->setWorkFactor(12);
+		return $security;
 	},
 	true
 );
+
+$di->set('userAuth', function () {
+	$userAuth = new UserAuth\Auth;
+	return $userAuth;
+	}
+);
+
+$di->setShared('mailer', function() {
+	include APP_PATH.'/library/SwiftMailer/lib/swift_required.php';
+	$transport = Swift_MailTransport ::newInstance();
+	$mailer = Swift_Mailer::newInstance($transport);
+	return $mailer;
+});

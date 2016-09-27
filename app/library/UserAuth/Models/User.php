@@ -1,5 +1,7 @@
 <?php
 
+namespace UserAuth\Models;
+
 use Phalcon\Validation;
 use Phalcon\Validation\Validator\Email as EmailValidator;
 
@@ -97,6 +99,11 @@ class User extends \Phalcon\Mvc\Model
 		return $this->name;
 	}
 
+	public function getEmail()
+	{
+		return $this->email;;
+	}
+
 	public function setEmail($email)
 	{
 		if ( ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -134,4 +141,28 @@ class User extends \Phalcon\Mvc\Model
 		return true;
 	}
 
+	public function setUserDetails($name, $email, $password, $passwordVerify)
+	{
+		$di = $this->getDI();
+		if ($password != $passwordVerify) {
+			$di->flash->error('Passwords do not match!');
+			return false;
+		}
+		if ( ! $this->setEmail($email)) {
+			$di->flash->error('Invalid email address!');
+			return false;
+		}
+
+		if ( ! $this->setPassword($password)) {
+			$di->flash->error('Provided password is too weak!');
+			return false;
+		}
+
+		if ( ! $this->setName($name)) {
+			$di->flash->error('Name contains invalid characters');
+			return false;
+		}
+
+		return true;
+	}
 }

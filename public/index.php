@@ -2,7 +2,7 @@
 use Phalcon\Di\FactoryDefault;
 
 error_reporting(E_ALL);
-
+date_default_timezone_set('Europe/Budapest');
 define('BASE_PATH', dirname(__DIR__));
 define('APP_PATH', BASE_PATH . '/app');
 
