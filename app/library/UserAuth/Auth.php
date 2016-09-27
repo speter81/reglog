@@ -30,6 +30,7 @@ class Auth extends Component {
 		$user = new User;
 
 		if ($user->setUserDetails($name, $email, $password, $passwordVerify)) {
+			$user->save();
 			$this->sendConfirmationMail($user);
 			$this->response->redirect('/');
 			$this->view->disable();
@@ -110,7 +111,7 @@ class Auth extends Component {
 		$message = Message::newInstance('Welcome to our site')
 			->setFrom(array('saraiptr@gmail.com' => 'Peter'))
 			->setTo(array($user->getEmail() => $user->getName()))
-			->setBody($emailTemplate);
+			->setBody($emailTemplate, 'text/html');
 
 		return $mailer->send($message);
 	}
