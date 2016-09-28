@@ -16,9 +16,9 @@ class AccessLog extends \Phalcon\Mvc\Model
 
 	/**
 	 *
-	 * @var string
+	 * @var integer
 	 * @Primary
-	 * @Column(type="string", length=39, nullable=false)
+	 * @Column(type="integer", length=10, nullable=false)
 	 */
 	public $ip;
 
@@ -82,27 +82,29 @@ class AccessLog extends \Phalcon\Mvc\Model
 		return parent::findFirst($parameters);
 	}
 
-	private function getLastAttemptFromIP($ip)
+	private function getLastAttemptFromIP($longIp)
 	{
 		return self::findFirst([
 			'conditions' => 'ip = ?1 AND ?2 < last_attempt',
 			'bind' => [
-				1 => $ip,
+				1 => $longIp,
 				2 => date('Y-m-d H:i:s', strtotime('-5 minutes', time()))
 			]
 		]);
 	}
 
-	public function logAccessFailure($ip, $user_id = 0)
+	public function logAccessFailure($ip, $type = 32, $user_id = 0)
 	{
+		$longIp = ip2long($ip);
 		$time = time();
 		$now = date('Y-m-d H:i:s', $time);
-		$accessLog = $this->getLastAttemptFromIP($ip);
+		$accessLog = $this->getLastAttemptFromIP($longIp);
 		if ( ! $accessLog) {
 			$accessLog = $this;
 		}
 		$accessLog->user_id = $user_id;
-		$accessLog->ip = $ip;
+		$accessLog->ip = $longIp;
+
 		if ( ! isset($accessLog->first_attempt)) {
 			$accessLog->first_attempt = $now;
 			$accessLog->expire_time = $time + 3600;
@@ -120,25 +122,38 @@ class AccessLog extends \Phalcon\Mvc\Model
 			'column' => 'count',
 			'conditions' => "ip = ?0 AND expire_time < NOW()",
 			'bind' => [
-				$ip
+				ip2long($ip)
 			]
 		]);
 		return $sum;
 	}
 
-	public static function getFailedAttemptsFromNetwork($ip, $subnet)
+	public static function getFailedAttemptsFromNetwork($ip, $cidr)
 	{
 		$sum = AccessLog::sum([
 			'column' => 'count',
 			'conditions' => "ip = ?0 AND expire_time < NOW()",
-			'bind' => [$ip]
+			'bind' => [
+				static::getBroadcastFromNetwork($ip, $cidr)
+			]
 		]);
 		return $sum;
 	}
 
 	public static function getFailedAttemptsForUser($userId)
 	{
-		return 0;
+		$sum = AccessLog::sum([
+			'column' => 'count',
+			'conditions' => 'expire_time < NOW() AND `user_id` = ?0',
+			'bind' => [
+				$userId
+			]
+		]);
+		return $sum;
 	}
 
+	private static function getBroadcastFromNetwork($network, $cidr)
+	{
+		return long2ip(ip2long($network) + pow(2, (32 - $cidr)) - 1);
+	}
 }
