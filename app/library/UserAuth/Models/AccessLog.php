@@ -144,7 +144,7 @@ class AccessLog extends \Phalcon\Mvc\Model
 	{
 		$sum = AccessLog::sum([
 			'column' => 'count',
-			'conditions' => 'expire_time < NOW() AND `user_id` = ?0',
+			'conditions' => 'expire_time < NOW() AND user_id = ?0',
 			'bind' => [
 				$userId
 			]

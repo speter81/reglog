@@ -56,5 +56,13 @@ class UserController extends ControllerBase
 		return;
 	}
 
+	public function activateAction($verificationHash)
+	{
+		if ($this->userAuth->verifyActivationHash($verificationHash)) {
+			$this->flash->success('Activation successful! Please log in!');
+		} else {
+			$this->flash->error('Link is expired or invalid hash!');
+		}
+	}
 }
 

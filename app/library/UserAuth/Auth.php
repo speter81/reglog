@@ -59,9 +59,16 @@ class Auth extends Component {
 			$this->flash->error('User not exists!');
 			return; false;
 		}
+
+		if ($user->status == 0) {
+			$this->logFailedAccess($ip);
+			$this->flash->error('User is not active, please activate first!');
+			return; false;
+		}
+
 		if ( ! $this->security->checkHash($password, $user->password)) {
 			$this->logFailedAccess($ip, $email);
-			$this->flash->error('Invalid password!');
+			$this->flash->error('Invalid password: '.$user->password);
 			return; false;
 		}
 
@@ -139,7 +146,13 @@ class Auth extends Component {
 
 	private function sendConfirmationMail($user)
 	{
- 		$emailTemplate = $this->view->getRender('emails','welcome',['fullName' => $user->getName()]);
+		$activationLink = $this->getActionvationLink($user);
+ 		$emailTemplate = $this->view->getRender('emails','welcome',
+				[
+					'fullName' => $user->getName(),
+					'activationLink' => $activationLink
+				]
+			);
 
 		$mailer = $this->mailer;
 
@@ -151,4 +164,34 @@ class Auth extends Component {
 		return $mailer->send($message);
 	}
 
+	private function getActionvationLink($user)
+	{
+		$ttl = time() + 86400;
+		return 'http://'.$_SERVER['SERVER_NAME'].'/user/activate/'.$user->getActivationHash($ttl);
+	}
+
+	public function verifyActivationHash($userHash)
+	{
+		list($hash, $userId, $ttl) = explode(':',$userHash);
+		if ($ttl < time()) {
+			return false;
+		}
+
+		$user = User::findFirstById($userId);
+		if ( ! $user) {
+			return false;
+		}
+
+		if ($user->status != 0) {
+			return false;
+		}
+
+		$verificationHash = $user->getActivationHash($ttl);
+		if ($userHash != $verificationHash) {
+			return false;
+		}
+
+		$user->status = 1;
+		return $user->save();
+	}
 }

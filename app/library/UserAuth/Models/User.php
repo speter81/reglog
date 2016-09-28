@@ -43,8 +43,22 @@ class User extends \Phalcon\Mvc\Model
 	 *
 	 * @return boolean
 	 */
+
+	/**
+	 *
+	 * @var integer
+	 * @Column(type="integer", length=3, nullable=false)
+	 */
+	public $status;
+
 	public function validation()
 	{
+		/*
+		 *  Disabled because of compatibility issues between
+		 * Phalcon 2.0.x (demo server) and Phalcon 3.0.x (dev)
+		 */
+		return true;
+
 		$validator = new Validation();
 		$validator->add(
 			'email',
@@ -163,6 +177,16 @@ class User extends \Phalcon\Mvc\Model
 			return 'Name contains invalid characters';
 		}
 
+
+		// Disabled user by default
+		$this->status = 0;
+
 		return true;
 	}
+
+	public function getActivationHash($ttl)
+	{
+		return sha1($this->id.':'.$this->email.':'.$ttl).':'.$this->id.':'.$ttl;
+	}
+
 }
