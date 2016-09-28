@@ -85,7 +85,7 @@ class AccessLog extends \Phalcon\Mvc\Model
 	private static function getLastAttemptFromIP($longIp)
 	{
 		return self::findFirst([
-			'conditions' => 'ip = ?1 AND ?2 < last_attempt AND user_id = ?3',
+			'conditions' => 'ip = ?1 AND ?2 < last_attempt',
 			'bind' => [
 				1 => $longIp,
 				2 => date('Y-m-d H:i:s', strtotime('-5 minutes', time())),
