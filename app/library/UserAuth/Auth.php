@@ -68,7 +68,7 @@ class Auth extends Component {
 
 		if ( ! $this->security->checkHash($password, $user->password)) {
 			$this->logFailedAccess($ip, $email);
-			$this->flash->error('Invalid password: '.$user->password);
+			$this->flash->error('Invalid password!');
 			return; false;
 		}
 
@@ -92,12 +92,12 @@ class Auth extends Component {
 			return true;
 		}
 
-		$failedLoginsFromNetwork16 = AccessLog::getFailedAttemptsFromNetwork($ip, 16);
-		if ($failedLoginsFromNetwork16 >= 500) {
+		$failedLoginsFromNetworkC = AccessLog::getFailedAttemptsFromNetwork($ip, 24);
+		if ($failedLoginsFromNetworkC >= 500) {
 			return true;
 		}
-		$failedLoginsFromNetwork24 = AccessLog::getFailedAttemptsFromNetwork($ip, 24);
-		if ($failedLoginsFromNetwork24 >= 1000) {
+		$failedLoginsFromNetworkB = AccessLog::getFailedAttemptsFromNetwork($ip, 16);
+		if ($failedLoginsFromNetworkB >= 1000) {
 			return true;
 		}
 
@@ -133,7 +133,6 @@ class Auth extends Component {
 
 	public function logFailedAccess($ip, $email = NULL)
 	{
-		$log = new AccessLog;
 		$userId = 0;
 		if (isset($email)) {
 			$user = User::findFirstByEmail($email);
@@ -141,7 +140,11 @@ class Auth extends Component {
 				$userId = $user->getUserId();
 			}
 		}
-		return $log->logAccessFailure($ip, $userId);
+
+		AccessLog::logAccessFailure($ip, $userId);
+		AccessLog::logAccessFailureClassB($ip, $userId);
+		AccessLog::logAccessFailureClassC($ip, $userId);
+		return true;
 	}
 
 	private function sendConfirmationMail($user)

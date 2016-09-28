@@ -82,27 +82,27 @@ class AccessLog extends \Phalcon\Mvc\Model
 		return parent::findFirst($parameters);
 	}
 
-	private function getLastAttemptFromIP($longIp)
+	private static function getLastAttemptFromIP($longIp)
 	{
 		return self::findFirst([
-			'conditions' => 'ip = ?1 AND ?2 < last_attempt',
+			'conditions' => 'ip = ?1 AND ?2 < last_attempt AND user_id = ?3',
 			'bind' => [
 				1 => $longIp,
-				2 => date('Y-m-d H:i:s', strtotime('-5 minutes', time()))
+				2 => date('Y-m-d H:i:s', strtotime('-5 minutes', time())),
 			]
 		]);
 	}
 
-	public function logAccessFailure($ip, $type = 32, $user_id = 0)
+	public static function logAccessFailure($ip, $userId = 0)
 	{
 		$longIp = ip2long($ip);
 		$time = time();
 		$now = date('Y-m-d H:i:s', $time);
-		$accessLog = $this->getLastAttemptFromIP($longIp);
+		$accessLog = static::getLastAttemptFromIP($longIp);
 		if ( ! $accessLog) {
-			$accessLog = $this;
+			$accessLog = new AccessLog;;
 		}
-		$accessLog->user_id = $user_id;
+		$accessLog->user_id = $userId;
 		$accessLog->ip = $longIp;
 
 		if ( ! isset($accessLog->first_attempt)) {
@@ -114,6 +114,18 @@ class AccessLog extends \Phalcon\Mvc\Model
 		}
 		$accessLog->last_attempt = $now;
 		$accessLog->save();
+	}
+
+	public static function logAccessFailureClassC($ip, $user_id = 0)
+	{
+		$network = static::getNetworkAddressFromCidr($ip, 24);
+		static::logAccessFailure($network, $user_id);
+	}
+
+	public static function logAccessFailureClassB($ip, $user_id = 0)
+	{
+		$network = static::getNetworkAddressFromCidr($ip, 16);
+		static::logAccessFailure($network, $user_id);
 	}
 
 	public static function getFailedAttemptsFromIP($ip)
@@ -134,7 +146,7 @@ class AccessLog extends \Phalcon\Mvc\Model
 			'column' => 'count',
 			'conditions' => "ip = ?0 AND expire_time < NOW()",
 			'bind' => [
-				static::getBroadcastFromNetwork($ip, $cidr)
+				static::getNetworkAddressFromCidr($ip, $cidr)
 			]
 		]);
 		return $sum;
@@ -151,9 +163,12 @@ class AccessLog extends \Phalcon\Mvc\Model
 		]);
 		return $sum;
 	}
-
-	private static function getBroadcastFromNetwork($network, $cidr)
+	/*
+	 * https://mebsd.com/coding-snipits/php-ipcalc-coding-subnets-ip-addresses.html
+	 */
+	private static function getNetworkAddressFromCidr($ip, $cidr)
 	{
-		return long2ip(ip2long($network) + pow(2, (32 - $cidr)) - 1);
+		$network = long2ip((ip2long($ip)) & ((-1 << (32 - (int)$cidr))));
+		return $network;
 	}
 }
