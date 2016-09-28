@@ -160,7 +160,7 @@ class Auth extends Component {
 		$mailer = $this->mailer;
 
 		$message = Message::newInstance('Welcome to our site')
-			->setFrom(array('saraiptr@gmail.com' => 'Peter'))
+			->setFrom(array('peter@livesystems.hu' => 'Peter'))
 			->setTo(array($user->getEmail() => $user->getName()))
 			->setBody($emailTemplate, 'text/html');
 
@@ -170,7 +170,7 @@ class Auth extends Component {
 	private function getActionvationLink($user)
 	{
 		$ttl = time() + 86400;
-		return 'http://'.$_SERVER['SERVER_NAME'].'/user/activate/'.$user->getActivationHash($ttl);
+		return $this->url->get($this->url->getBaseUri().'user/activate/'.$user->getActivationHash($ttl));
 	}
 
 	public function verifyActivationHash($userHash)

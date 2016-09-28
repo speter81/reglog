@@ -15,9 +15,6 @@ $di->setShared('config', function () {
 	return include APP_PATH . "/config/config.php";
 });
 
-/**
- * The URL component is used to generate all kind of urls in the application
- */
 $di->setShared('url', function () use ($di) {
 	$config = $di->getConfig();
 	$url = new UrlResolver();
@@ -25,9 +22,6 @@ $di->setShared('url', function () use ($di) {
 	return $url;
 });
 
-/**
- * Setting up the view component
- */
 $di->setShared('view', function () use ($di) {
 	$config = $di->getConfig();
 
@@ -42,9 +36,6 @@ $di->setShared('view', function () use ($di) {
 	return $view;
 });
 
-/**
- * Database connection is created based in the parameters defined in the configuration file
- */
 $di->setShared('db', function () use ($di) {
 	$config = $di->getConfig();
 
@@ -61,16 +52,10 @@ $di->setShared('db', function () use ($di) {
 });
 
 
-/**
- * If the configuration specify the use of metadata adapter use it or use memory otherwise
- */
 $di->setShared('modelsMetadata', function () {
 	return new MetaDataAdapter();
 });
 
-/**
- * Register the session flash service with the Twitter Bootstrap classes
- */
 $di->set('flash', function () {
 	return new Flash([
 		'error'   => 'alert alert-danger',
@@ -80,9 +65,6 @@ $di->set('flash', function () {
 	]);
 });
 
-/**
- * Start the session the first time some component request the session service
- */
 $di->setShared('session', function () {
 	$session = new SessionAdapter();
 	$session->start();

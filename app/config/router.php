@@ -2,7 +2,6 @@
 
 use Phalcon\Mvc\Router;
 
-// Create the router
 $router = new Router();
 $router->setDefaults(
 	[
@@ -10,7 +9,7 @@ $router->setDefaults(
 		'action'     => "login",
 	]
 );
-// Define a route
+
 $router->add(
 	':controller/:action/:params',
 	[

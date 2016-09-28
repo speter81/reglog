@@ -26,13 +26,6 @@ CREATE TABLE `access_log` (
   `count` smallint(5) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Indexek a kiírt táblákhoz
---
-
---
--- A tábla indexei `access_log`
---
 ALTER TABLE `access_log`
   ADD PRIMARY KEY (`ip`,`first_attempt`),
   ADD KEY `user_id` (`user_id`),
