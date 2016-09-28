@@ -2,6 +2,8 @@
 
 namespace UserAuth\Models;
 
+use \Phalcon\Mvc\Model\Query;
+
 class AccessLog extends \Phalcon\Mvc\Model
 {
 
@@ -33,6 +35,13 @@ class AccessLog extends \Phalcon\Mvc\Model
 	 * @Column(type="string", nullable=false)
 	 */
 	public $last_attempt;
+
+	/**
+	 *
+	 * @var integer
+	 * @Column(type="integer", length=11, nullable=false)
+	 */
+	public $expire_time;
 
 	/**
 	 *
@@ -73,36 +82,63 @@ class AccessLog extends \Phalcon\Mvc\Model
 		return parent::findFirst($parameters);
 	}
 
-	public static function getLastAccessByIP($ip)
+	private function getLastAttemptFromIP($ip)
 	{
 		return self::findFirst([
-					"conditions" => "ip = ?1",
-					"order" =>	"first_attempt DESC",
-					"bind"       => [
-						1 => $ip
-						]
-				]);
+			'conditions' => 'ip = ?1 AND ?2 < last_attempt',
+			'bind' => [
+				1 => $ip,
+				2 => date('Y-m-d H:i:s', strtotime('-5 minutes', time()))
+			]
+		]);
 	}
 
-	public function getBlockTime()
+	public function logAccessFailure($ip, $user_id = 0)
 	{
-		return strtotime($this->last_attempt) - strtotime($this->first_attempt);
+		$time = time();
+		$now = date('Y-m-d H:i:s', $time);
+		$accessLog = $this->getLastAttemptFromIP($ip);
+		if ( ! $accessLog) {
+			$accessLog = $this;
+		}
+		$accessLog->user_id = $user_id;
+		$accessLog->ip = $ip;
+		if ( ! isset($accessLog->first_attempt)) {
+			$accessLog->first_attempt = $now;
+			$accessLog->expire_time = $time + 3600;
+			$accessLog->count = 1;
+		} else {
+			$accessLog->count++;
+		}
+		$accessLog->last_attempt = $now;
+		$accessLog->save();
 	}
 
-	public function logAccessFailure($ip, $user_id = NULL)
+	public static function getFailedAttemptsFromIP($ip)
 	{
-		$now = date('Y-m-d H:i:s');
-		$this->user_id = 0;
-		if (isset($user_id)) {
-			$this->user_id = $user_id;
-		}
-		$this->ip = $ip;
-		if ( ! isset($this->first_attempt)) {
-			$this->first_attempt = $now;
-		}
-		$this->last_attempt = $now;
-		$this->count += 1;
-		$this->save();
+		$sum = AccessLog::sum([
+			'column' => 'count',
+			'conditions' => "ip = ?0 AND expire_time < NOW()",
+			'bind' => [
+				$ip
+			]
+		]);
+		return $sum;
+	}
+
+	public static function getFailedAttemptsFromNetwork($ip, $subnet)
+	{
+		$sum = AccessLog::sum([
+			'column' => 'count',
+			'conditions' => "ip = ?0 AND expire_time < NOW()",
+			'bind' => [$ip]
+		]);
+		return $sum;
+	}
+
+	public static function getFailedAttemptsForUser($userId)
+	{
+		return 0;
 	}
 
 }

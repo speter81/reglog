@@ -8,8 +8,9 @@ class UserController extends ControllerBase
 
 	public function loginAction()
 	{
+		$ip = $_SERVER['REMOTE_ADDR'];
 		$this->view->setVar('reCaptchaSiteKey', '6LeHWwcUAAAAAH3NeUx8P8KDZ6EbAwPFfEndfXUQ');
-		$this->view->setVar('captchaNeeded', $this->userAuth->isCaptchaRequired());
+		$this->view->setVar('captchaNeeded', $this->userAuth->isCaptchaRequired($ip));
 
 		if ($this->session->has('name')) {
 			$this->response->redirect('/user/welcome');

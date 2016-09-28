@@ -94,6 +94,11 @@ class User extends \Phalcon\Mvc\Model
 		return false;
 	}
 
+	public function getUserId()
+	{
+		return $this->id;
+	}
+
 	public function getName()
 	{
 		return $this->name;
@@ -127,7 +132,7 @@ class User extends \Phalcon\Mvc\Model
 		if ( ! preg_match('/[0-9]/', $password)) {
 			return false;
 		}
-		if ( ! preg_match('/[\+\-!_#]+/', $password)) {
+		if ( ! preg_match('/[\+\-!_#\$]+/', $password)) {
 			return false;
 		}
 		$security = $this->getDI()->getSecurity();
@@ -143,24 +148,19 @@ class User extends \Phalcon\Mvc\Model
 
 	public function setUserDetails($name, $email, $password, $passwordVerify)
 	{
-		$di = $this->getDI();
 		if ($password != $passwordVerify) {
-			$di->flash->error('Passwords do not match!');
-			return false;
+			return 'Passwords do not match!';
 		}
 		if ( ! $this->setEmail($email)) {
-			$di->flash->error('Invalid email address!');
-			return false;
+			return 'Invalid email address!';
 		}
 
 		if ( ! $this->setPassword($password)) {
-			$di->flash->error('Provided password is too weak!');
-			return false;
+			return 'Provided password is too weak!';
 		}
 
 		if ( ! $this->setName($name)) {
-			$di->flash->error('Name contains invalid characters');
-			return false;
+			return 'Name contains invalid characters';
 		}
 
 		return true;
