@@ -43,13 +43,13 @@ class Auth extends Component {
 		if ( ! $this->security->checkToken()) {
 			$this->logFailedAccess($ip);
 			$this->flash->error('Invalid request, please try again!');
-			return; false;
+			return false;
 		}
 */
 		if ($this->isCaptchaRequired($ip, $email) && ! $this->captchaValid()) {
 			$this->logFailedAccess($ip, $email);
 			$this->flash->error('Please use the captcha!');
-			return; false;
+			return false;
 		}
 
 		$user = User::findFirstByEmail($email);
@@ -57,19 +57,19 @@ class Auth extends Component {
 		if ( ! $user) {
 			$this->logFailedAccess($ip);
 			$this->flash->error('User not exists!');
-			return; false;
+			return false;
 		}
 
 		if ($user->status == 0) {
 			$this->logFailedAccess($ip);
 			$this->flash->error('User is not active, please activate first!');
-			return; false;
+			return false;
 		}
 
 		if ( ! $this->security->checkHash($password, $user->password)) {
 			$this->logFailedAccess($ip, $email);
 			$this->flash->error('Invalid password!');
-			return; false;
+			return false;
 		}
 
 		$this->session->set('name', $user->getName());
